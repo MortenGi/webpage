@@ -3,22 +3,40 @@ from flask import render_template   #to render e.g. html from templates (!) fold
 from flask import request           #to accept and work with params
 from flask import jsonify           #convert dict to json for a flask response
 from flask import url_for
+from flask import flash
 import json
 import pickle
 
 views = Blueprint(__name__,'views')
 
-@views.route('/')
+@views.route('/', methods= ['GET', 'POST'])
 def home():
     #show stuff on groundpage
     return render_template('home.html', name = "Morti")
 
-@views.route('/login')
+@views.route('/login', methods= ['GET', 'POST'])
 def login():
+    data = request.form
     return render_template('login.html')
 
-@views.route('/signup')
+@views.route('/signup', methods= ['GET', 'POST'])
 def signup():
+    if request.method=='POST':
+        email=request.form.get('email')
+        firstName=request.form.get('firstName')
+        pw1=request.form.get('password1')
+        pw2=request.form.get('password2')
+        if len(email)<4:
+            flash('Email must be greater than 3 characters', category='error')
+        elif len(firstName)<2:
+            flash('first Name too short', category='error')
+        elif pw1 != pw2:
+            flash('passwords do not align', category='error')
+        elif len(pw1)<7:
+            flash('password too short', category='error')
+        else:
+            flash('user added', category='success')
+
     return render_template('singup.html')
 
 @views.route('/user/<username>')
