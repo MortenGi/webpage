@@ -26,6 +26,16 @@ def login():
         if email!='mortengiese@gmx.de':
             flash('Not Admin Login', category = 'neutral')
 
+        user = User.query.filter_by(email=email).first()
+        if user:
+            if check_password_hash(user.pw, pw):
+                flash('Logged in!', category="sucess")
+            else:
+                flash('Try again', category="error")
+        else:
+            flash('User does not exist', category="error")
+
+
     return render_template('login.html')
 
 @views.route('/signup', methods= ['GET', 'POST'])
@@ -35,7 +45,10 @@ def signup():
         firstName   =request.form.get('firstName')
         pw1         =request.form.get('password1')
         pw2         =request.form.get('password2')
-        if len(email)<4:
+        user = User.query.filter_by(email=email).first()
+        if user:
+            flash("Email already exists", category='error')
+        elif len(email)<4:
             flash('Email must be greater than 3 characters', category='error')
         elif len(firstName)<2:
             flash('First Name must be greater than 1 character', category='error')
@@ -44,7 +57,7 @@ def signup():
         elif len(pw1)<7:
             flash('Password too short', category='error')
         else:
-            new_user = User(email=email, first_name=firstName, pw = generate_password_hash(p1, method='share256') )
+            new_user = User(email=email, first_name=firstName, pw = generate_password_hash(pw1, method='sha256') )
             db.session.add(new_user)
             db.session.commit()
             flash('Account added!', category='success')
