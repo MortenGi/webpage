@@ -16,28 +16,34 @@ def home():
 
 @views.route('/login', methods= ['GET', 'POST'])
 def login():
-    data = request.form
+    if request.method=='POST':
+        email       =request.form.get('email')
+        pw          = request.form.get('password')
+        if email!='mortengiese@gmx.de':
+            flash('Not Admin Login', category = 'neutral')
+
     return render_template('login.html')
 
 @views.route('/signup', methods= ['GET', 'POST'])
 def signup():
     if request.method=='POST':
-        email=request.form.get('email')
-        firstName=request.form.get('firstName')
-        pw1=request.form.get('password1')
-        pw2=request.form.get('password2')
+        email       =request.form.get('email')
+        firstName   =request.form.get('firstName')
+        pw1         =request.form.get('password1')
+        pw2         =request.form.get('password2')
         if len(email)<4:
             flash('Email must be greater than 3 characters', category='error')
         elif len(firstName)<2:
-            flash('first Name too short', category='error')
+            flash('First Name must be greater than 1 character', category='error')
         elif pw1 != pw2:
-            flash('passwords do not align', category='error')
+            flash('Passwords do not align', category='error')
         elif len(pw1)<7:
-            flash('password too short', category='error')
+            flash('Password too short', category='error')
         else:
-            flash('user added', category='success')
+            flash('User added!', category='success')
 
     return render_template('singup.html')
+
 
 @views.route('/user/<username>')
 def profile(username):
