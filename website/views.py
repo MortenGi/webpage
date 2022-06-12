@@ -10,63 +10,43 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import json
 import pickle
 from . import db
+from flask_login import login_required, current_user
+from .models import Note
+import json #used to get notes via post and java
 
 views = Blueprint('views', __name__,)
 
 @views.route('/', methods= ['GET', 'POST'])
+@login_required
 def home():
     #show stuff on groundpage
-    return render_template('home.html', name = "Morti")
 
-@views.route('/login', methods= ['GET', 'POST'])
-def login():
-    if request.method=='POST':
-        email       =request.form.get('email')
-        pw          = request.form.get('password')
-        if email!='mortengiese@gmx.de':
-            flash('Not Admin Login', category = 'neutral')
+    if request.method == 'POST':
+        note = request.form.get('note')
+        name = current_user.first_name
 
-        user = User.query.filter_by(email=email).first()
-        if user:
-            if check_password_hash(user.pw, pw):
-                flash('Logged in!', category="sucess")
-            else:
-                flash('Try again', category="error")
+        if len(note) < 1:
+            flash('Note must be greater than 1 character', category='error')
         else:
-            flash('User does not exist', category="error")
-
-
-    return render_template('login.html')
-
-@views.route('/signup', methods= ['GET', 'POST'])
-def signup():
-    if request.method=='POST':
-        email       =request.form.get('email')
-        firstName   =request.form.get('firstName')
-        pw1         =request.form.get('password1')
-        pw2         =request.form.get('password2')
-        user = User.query.filter_by(email=email).first()
-        if user:
-            flash("Email already exists", category='error')
-        elif len(email)<4:
-            flash('Email must be greater than 3 characters', category='error')
-        elif len(firstName)<2:
-            flash('First Name must be greater than 1 character', category='error')
-        elif pw1 != pw2:
-            flash('Passwords do not align', category='error')
-        elif len(pw1)<7:
-            flash('Password too short', category='error')
-        else:
-            new_user = User(email=email, first_name=firstName, pw = generate_password_hash(pw1, method='sha256') )
-            db.session.add(new_user)
+            new_note=Note(data = note, user_id=current_user.id)
+            db.session.add(new_note)
             db.session.commit()
-            flash('Account added!', category='success')
-            return redirect(url_for('views.home'))
-    return render_template('singup.html')
+            flash(f'Note to user {name} is saved', category='success')
 
-@views.route('/logout')
-def lougout():
-    return "<a>'logout.html'</a>"
+
+
+    return render_template('home.html', user=current_user)
+
+@views.route('/delete-note',  methods=['POST'])
+def delete_note():
+    note = json.loads(request.data)
+    noteId = note['noteId']
+    note = Note.query.get(noteId)
+    if note:
+        if note.user_id == current_user.id:
+            db.session.delete(note)
+            db.session.commit()
+    return jsonify({}) #need to response something
 
 
 @views.route('/user/<username>')
