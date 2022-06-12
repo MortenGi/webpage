@@ -9,11 +9,11 @@ DB_NAME = "database.db"
 def create_app():
     app = Flask(__name__)
     app.secret_key = 'dasda'
-    app.config['SQLALCHEMY_DATA_URI'] = f'sqlite:///{DB_NAME}'
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DB_NAME}'
     db.init_app(app)
 
     login_manager = LoginManager()
-    login_manager.login_view = 'auth.login'
+    login_manager.login_view = 'auth.login' #redirect here of not logged in, e.g. for home
     login_manager.init_app(app)
 
 
